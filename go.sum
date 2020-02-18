@@ -1,0 +1,11 @@
+github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/davidbyttow/govips v0.0.0-20190304175058-d272f04c0fea h1:ZtETbJTO1R3qVLdVbpjrDhD5fR8bYVhhq2RMi7rOlH4=
+github.com/davidbyttow/govips v0.0.0-20190304175058-d272f04c0fea/go.mod h1:a3qO525EPfJNYa0NXBcNtXzJvyQsJAxphEDa7OOHPBk=
+github.com/gographics/imagick v3.2.0+incompatible/go.mod h1:gk55mrttmUSR+Vt6dxnxuD7EKU/3e5Ehe8HRGVCI8mw=
+github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
+github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
+github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
+gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
+gopkg.in/gographics/imagick.v3 v3.2.0 h1:eUwlkCw2fa20OGu47G39Im8c50S9n/CVkh8PwtOKExA=
+gopkg.in/gographics/imagick.v3 v3.2.0/go.mod h1:HbW83cYCl1jftZi3B/VZpVqsuNi4vW7qUrghjxBiT+8=
+gopkg.in/yaml.v2 v2.2.2/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
