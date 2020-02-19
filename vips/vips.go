@@ -8,12 +8,13 @@ import (
 	"fmt"
 
 	"github.com/davidbyttow/govips/pkg/vips"
-	"github.com/gigamorph/go-pyramid/config"
 )
 
+// VIPS encapsulates code that use the govips package
 type VIPS struct {
 }
 
+// GetVIPS returns the VIPS instance
 func GetVIPS() *VIPS {
 	if instance == nil {
 		vips.Startup(nil)
@@ -29,6 +30,7 @@ func new() *VIPS {
 	return &v
 }
 
+// Finalize cleans up after govips
 func (v *VIPS) Finalize() {
 	vips.ShutdownThread()
 	vips.Shutdown()
@@ -80,7 +82,8 @@ func (v *VIPS) RemoveAlpha(inFile, outFile string) error {
 	return nil
 }
 
-func (v *VIPS) ICCTransformFile(inFile string, outFile string, outProfilePath string) error {
+// ICCTransformFile performs ICC profile conversion
+func (v *VIPS) ICCTransformFile(inFile, outFile, outProfilePath string) error {
 	image, err := vips.NewImageFromFile(inFile)
 	if err != nil {
 		return fmt.Errorf("VIPS#ICCTransformFile failed to read image - %v", err)
@@ -88,7 +91,8 @@ func (v *VIPS) ICCTransformFile(inFile string, outFile string, outProfilePath st
 
 	// Default intent is VIPS_INTENT_RELATIVE:
 	// see https://libvips.github.io/libvips/API/current/libvips-resample.html
-	outImage, err := vips.IccTransform(image.Image(), outProfilePath)
+	outImage, err := vips.IccTransform(image.Image(), outProfilePath,
+		vips.InputInt("intent", C.VIPS_INTENT_RELATIVE))
 	if err != nil {
 		return fmt.Errorf("VIPS#ICCTransformFile failed to transform - %v", err)
 	}
@@ -107,10 +111,10 @@ func (v *VIPS) ICCTransformFile(inFile string, outFile string, outProfilePath st
 // an appropriate profile for the icc_transform command so we have to
 // call vipsthumbnail instead which does some magick behind the scenes
 // to properly convert between the profiles.
-func (v *VIPS) FixGray(inFile, outFile string, width uint) error {
+func (v *VIPS) FixGray(inFile, outFile string, width uint, targetICCProfile string) error {
 	image, err := vips.Thumbnail(inFile, int(width),
-		vips.InputString("export_profile", config.ICCProfile),
-		vips.InputString("intent", "perceptual"),
+		vips.InputString("export_profile", targetICCProfile),
+		vips.InputInt("intent", C.VIPS_INTENT_RELATIVE),
 	)
 	if err != nil {
 		return fmt.Errorf("FixGray failed to create thumbnail - %v", err)

@@ -67,9 +67,9 @@ func (c *Context) CompressionOption() string {
 	switch c.Input.Compression {
 	case "jpeg":
 		quality := c.Input.Quality
-		return fmt.Sprintf("-c jpeg:%d", quality)
+		return fmt.Sprintf("jpeg:%d", quality)
 	case "lzw":
-		return "-c lzw"
+		return "lzw"
 	default:
 		return ""
 	}

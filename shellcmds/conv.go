@@ -44,7 +44,7 @@ func FixGray(inFile, outFile string) error {
 
 	args := []string{
 		inFile,
-		fmt.Sprintf("--eprofile=%s", config.ICCProfile),
+		fmt.Sprintf("--eprofile=%s", config.TargetICCProfileIIIF),
 		"--size", fmt.Sprintf("%dx%d", w, h),
 		"--intent", "perceptual",
 		"-o", fmt.Sprintf("%s[compression=none,strip]", outFile),
@@ -60,7 +60,7 @@ func ICCTransform(inFile, outFile, iccProfile string) error {
 		inFile,
 		//fmt.Sprintf("%s[compression=none,strip]", outFile),
 		fmt.Sprintf("%s[compression=none]", outFile),
-		config.ICCProfile,
+		config.TargetICCProfileIIIF,
 		"--embedded",
 		"--input-profile", iccProfile,
 		"--intent", "perceptual",
@@ -89,4 +89,27 @@ func ToTiff(inFile, outFile string) error {
 	}
 	_, err := util.Exec(config.VIPS, args)
 	return err
+}
+
+func BuildPyramid(inFiles []string, outFile string, options map[string]string) (err error) {
+	args := make([]string, 0, 32)
+
+	// c: compression. e.g.) "jpeg:90"
+	if c := options["c"]; c != "" {
+		args = append(args, "-c", c)
+	}
+
+	args = append(args,
+		"-t",        // output to tiles
+		"-w", "256", // tile width
+		"-l", "256", // tile length
+	)
+	args = append(args, inFiles...)
+	args = append(args, outFile)
+
+	_, err = util.Exec(config.TIFFCopy, args)
+	if err != nil {
+		return fmt.Errorf("Agent#combineSubImages util.Exec failed - %v", err)
+	}
+	return nil
 }

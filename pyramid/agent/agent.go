@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
-	"strings"
 
 	"github.com/gigamorph/go-pyramid/config"
 	"github.com/gigamorph/go-pyramid/imagemagick"
 	"github.com/gigamorph/go-pyramid/pyramid/context"
 	"github.com/gigamorph/go-pyramid/pyramid/input"
 	"github.com/gigamorph/go-pyramid/pyramid/output"
+	"github.com/gigamorph/go-pyramid/shellcmds"
 	"github.com/gigamorph/go-pyramid/util"
 	"github.com/gigamorph/go-pyramid/vips"
 	"gopkg.in/gographics/imagick.v3/imagick"
@@ -69,13 +69,18 @@ func (a *Agent) toPyramidTIFF(c *context.Context) (err error) {
 	p := c.Input
 	inFile, outFile := p.InFile, p.OutFile
 
+	targetICCProfile := config.TargetICCProfileIIIF
+	if c.Input.TargetICCProfile != "" {
+		targetICCProfile = c.Input.TargetICCProfile
+	}
+
 	colorspace := im.GetImageColorspace()
 	hasAlpha := im.GetImageAlphaChannel()
 	imageFormat = im.GetImageFormat()
 	log.Printf("colorspace: %d, hasAlpha: %t, imageFormat: %s\n", colorspace, hasAlpha, imageFormat)
 
 	iccProfileName := im.GetICCProfileName()
-	log.Printf("ICC: [%s]\n", iccProfileName)
+	log.Printf("Source ICC: [%s]\n", iccProfileName)
 
 	// Check if channels is supported
 	if valid := a.validateChannels(colorspace); !valid {
@@ -114,7 +119,7 @@ func (a *Agent) toPyramidTIFF(c *context.Context) (err error) {
 	// convert between the profiles.
 	if colorspace == imagick.COLORSPACE_GRAY && (iccProfileName == "" || iccProfileName == "sRGB Profile") {
 		log.Printf("Fixing gray image %s with profile %s", inFile, iccProfile)
-		if err = v.FixGray(c.NoalphaFile, c.GrayFixedFile, c.Width); err != nil {
+		if err = v.FixGray(c.NoalphaFile, c.GrayFixedFile, c.Width, targetICCProfile); err != nil {
 			return fmt.Errorf("Agent#toPyramidTIFF FixGray failed - %v", err)
 		}
 		newProfile = true
@@ -123,8 +128,8 @@ func (a *Agent) toPyramidTIFF(c *context.Context) (err error) {
 	}
 
 	if !newProfile {
-		fmt.Printf("SRGB! %s -> %s\n", c.GrayFixedFile, c.ProfileFixedFile)
-		if err = a.vips.ICCTransformFile(c.GrayFixedFile, c.ProfileFixedFile, config.ICCProfile); err != nil {
+		fmt.Printf("ICC transform %s -> %s\n", c.GrayFixedFile, c.ProfileFixedFile)
+		if err = a.vips.ICCTransformFile(c.GrayFixedFile, c.ProfileFixedFile, targetICCProfile); err != nil {
 			return fmt.Errorf("Agent#toPyramidTIFF ICCTransform failed - %v", err)
 		}
 	} else {
@@ -201,27 +206,15 @@ func (a *Agent) createSubImages(c *context.Context, w, h uint) (err error) {
 	return err
 }
 
-func (a *Agent) combineSubImages(c *context.Context) (err error) {
-	var inFiles []string
-	inFiles, err = filepath.Glob(fmt.Sprintf("%s_*.tif", c.TmpFilePrefix))
+func (a *Agent) combineSubImages(c *context.Context) error {
+	inFiles, err := filepath.Glob(fmt.Sprintf("%s_*.tif", c.TmpFilePrefix))
 
-	args := make([]string, 0, 18)
+	err = shellcmds.BuildPyramid(inFiles, c.Input.OutFile, map[string]string{
+		"c": c.CompressionOption(),
+	})
 
-	if c := c.CompressionOption(); c != "" {
-		args = append(args, strings.Split(c, " ")...)
-	}
-
-	args = append(args,
-		"-t",        // output to tiles
-		"-w", "256", // tile width
-		"-l", "256", // tile length
-	)
-	args = append(args, inFiles...)
-	args = append(args, c.Input.OutFile)
-
-	_, err = util.Exec("/usr/local/bin/tiffcp", args)
 	if err != nil {
-		return fmt.Errorf("Agent#combineSubImages util.Exec failed - %v", err)
+		return fmt.Errorf("Agent#combineSubImages failed to build pyramid - %v", err)
 	}
 	return nil
 }
@@ -234,14 +227,3 @@ func (a *Agent) validateChannels(channels imagick.ColorspaceType) bool {
 		return false
 	}
 }
-
-/*
-func (a *Agent) validateChannels_old(channels string) bool {
-	switch channels {
-	case "srgb", "srgba", "gray", "cmyk":
-		return true
-	default:
-		return false
-	}
-}
-*/

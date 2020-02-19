@@ -18,7 +18,7 @@ var TempDir = getEnv("TEMP_DIR", fmt.Sprintf("%s/%s", os.TempDir(), "go-pyramid"
 var Identify = getEnv("IDENTIFY", "/usr/local/bin/identify")
 
 // TIFFCopy is the path to tiffcp
-var TIFFCopy = getEnv("TIFFCP", "/usr/local/bin/tiaffcp")
+var TIFFCopy = getEnv("TIFFCP", "/usr/local/bin/tiffcp")
 
 // VIPS is the path to vips.
 var VIPS = getEnv("VIPS", "/opt/vips/bin/vips")
@@ -29,8 +29,13 @@ var VIPSHeader = getEnv("VIPS_HEADER", "/opt/vips/bin/vipsheader")
 // VIPSThumbnail is the path to vipsthumbnail
 var VIPSThumbnail = getEnv("VIPS_THUMBNAIL", "/opt/vips/bin/vipsthumbnail")
 
-// ICCProfile is the path to sRGBProfile.icc
-var ICCProfile = getEnv("ICC_PROFILE", "/opt/docker-shared/image-conversion-test/sRGBProfile.icc")
+// TargetICCProfileIIIF is the path to the target ICC profile
+// for generation of pyramidal TIFFs for use by IIIF image server
+var TargetICCProfileIIIF = getEnv("TARGET_ICC_PROFILE_IIIF", "/opt/shared/go-pyramid/sRGBProfile.icc")
+
+// TargetICCProfileTIFF is the path to the target ICC profile
+// for generation of downloadable TIFFs
+var TargetICCProfileTIFF = getEnv("TARGET_ICC_PROFILE_TIFF", "/opt/shared/go-pyramid/AdobeRGB1998.icc")
 
 /**************************
  * END Command-line paths *
