@@ -6,7 +6,7 @@ import (
 )
 
 // TempDir is the directory which holds temporary image files
-var TempDir = getEnv("TEMP_DIR", fmt.Sprintf("%s/%s", os.TempDir(), "go-pyramid"))
+var TempDir = getEnv("GO_PYRAMID_TEMP_DIR", fmt.Sprintf("%s/%s", os.TempDir(), "go-pyramid"))
 
 /************************************************************
  * BEGIN Command-line paths                                 *
