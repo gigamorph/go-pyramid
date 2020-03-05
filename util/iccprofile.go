@@ -15,6 +15,11 @@ func GetICCProfileDesc(iccProfile []byte) string {
 	var nTags, tagSignature, tagDataOffset, tagDataSize uint32
 	var start int
 
+	if len(iccProfile) < 132 {
+		log.Printf("WARNING util.GetICCProfileDesc invailid string [%s]\n", string(iccProfile))
+		return ""
+	}
+
 	err = binary.Read(bytes.NewReader(iccProfile[128:132]), binary.BigEndian, &nTags)
 	if err != nil {
 		log.Printf("Error reading tags count - %v", err)
@@ -49,5 +54,6 @@ func GetICCProfileDesc(iccProfile []byte) string {
 		}
 	}
 
+	log.Printf("WARNING util.GetICCProfileDesc ICC profile description not found\n")
 	return ""
 }

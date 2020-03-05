@@ -127,7 +127,11 @@ func (a *Agent) toPyramidTIFF(c *context.Context) (err error) {
 		c.GrayFixedFile = c.NoalphaFile
 	}
 
-	if !newProfile {
+	if iccProfileName == "" {
+		log.Printf("WARNING icc profile not available for image %s - profile won't be converted\n", inFile)
+	}
+
+	if !newProfile && iccProfileName != "" {
 		fmt.Printf("ICC transform %s -> %s\n", c.GrayFixedFile, c.ProfileFixedFile)
 		if err = a.vips.ICCTransformFile(c.GrayFixedFile, c.ProfileFixedFile, targetICCProfile); err != nil {
 			return fmt.Errorf("Agent#toPyramidTIFF ICCTransform failed - %v", err)
