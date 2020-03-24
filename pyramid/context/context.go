@@ -3,10 +3,10 @@ package context
 import (
 	"fmt"
 	"math"
+	"os"
 	"path"
 	"strings"
 
-	"github.com/gigamorph/go-pyramid/config"
 	"github.com/gigamorph/go-pyramid/pyramid/input"
 	"github.com/gigamorph/go-pyramid/pyramid/output"
 )
@@ -15,11 +15,11 @@ import (
 type Context struct {
 	Input            input.Params
 	Output           output.Params
+	TmpFilePrefix    string
 	TiffFile         string
 	NoalphaFile      string
 	GrayFixedFile    string
 	ProfileFixedFile string
-	TmpFilePrefix    string
 	Width            uint // original width
 	Height           uint // original height
 }
@@ -33,15 +33,18 @@ func New(p input.Params) *Context {
 	name := strings.TrimSuffix(base, ext)
 
 	c.Input = p
-	c.TiffFile = fmt.Sprintf("%s/%s.tif", config.TempDir, name)
-	c.NoalphaFile = fmt.Sprintf("%s/%s.noalpha.tif", config.TempDir, name)
-	c.GrayFixedFile = fmt.Sprintf("%s/%s.grayfixed.tif", config.TempDir, name)
-	c.ProfileFixedFile = fmt.Sprintf("%s/%s.profilefixed.tif", config.TempDir, name)
-	c.TmpFilePrefix = fmt.Sprintf("%s/%s", config.TempDir, name)
-
+	if c.Input.TempDir == "" {
+		c.Input.TempDir = fmt.Sprintf("%s/cds2-scaler", os.TempDir())
+	}
+	c.TmpFilePrefix = fmt.Sprintf("%s/%s", c.Input.TempDir, name)
+	c.TiffFile = fmt.Sprintf("%s.tif", c.TmpFilePrefix)
+	c.NoalphaFile = fmt.Sprintf("%s.noalpha.tif", c.TmpFilePrefix)
+	c.GrayFixedFile = fmt.Sprintf("%s.grayfixed.tif", c.TmpFilePrefix)
+	c.ProfileFixedFile = fmt.Sprintf("%s.profilefixed.tif", c.TmpFilePrefix)
 	return &c
 }
 
+// InitialWH calculates the size of the biggest tile in the output pyramidal TIFF
 func (c *Context) InitialWH() (uint, uint) {
 	w0, h0 := c.Width, c.Height // original dimensions
 	w, h := w0, h0              // new starting point

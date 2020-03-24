@@ -3,6 +3,7 @@ package agent
 import (
 	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 
 	"github.com/gigamorph/go-pyramid/config"
@@ -44,6 +45,7 @@ func New(im *imagemagick.IM, vips *vips.VIPS) *Agent {
 func (a *Agent) Convert(p input.Params) (*output.Params, error) {
 	im := a.im
 	context := context.New(p)
+	a.mkdirp(context.Input.TempDir)
 	err := im.ReadImage(p.InFile)
 	if err != nil {
 		return nil, fmt.Errorf("Agent#Convert failed to read image - %v", err)
@@ -57,6 +59,9 @@ func (a *Agent) Convert(p input.Params) (*output.Params, error) {
 	err = a.toPyramidTIFF(context)
 	if err != nil {
 		return nil, fmt.Errorf("Agent#Convert PyramidTIFF failed - %v", err)
+	}
+	if p.DeleteTemp {
+		os.RemoveAll(context.Input.TempDir)
 	}
 	return &context.Output, nil
 }
@@ -229,5 +234,13 @@ func (a *Agent) validateChannels(channels imagick.ColorspaceType) bool {
 		return true
 	default:
 		return false
+	}
+}
+
+func (a *Agent) mkdirp(d string) {
+	log.Printf("Making sure directory %s exists", d)
+	err := os.MkdirAll(d, 0700)
+	if err != nil {
+		panic(fmt.Errorf("pyramid.Agent#mkdirp failed to create directory %s - %v", d, err))
 	}
 }

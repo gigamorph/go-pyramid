@@ -18,13 +18,19 @@ func TestConvert(t *testing.T) {
 
 	a := New(im, vips)
 
+	tempDir := "/tmp/go-pyramid-test"
+	iccProfile := fromRoot("test/resources/sRGBProfile.icc")
+
 	t.Run("RemoveAlpha", func(t *testing.T) {
 		_, err := a.Convert(input.Params{
-			InFile:      fromRoot("test/resources/images/ag-obj-286-0033-pub.alpha.tif"),
-			OutFile:     fromRoot("tmp/ag.alpha.tif"),
-			MaxSize:     0,
-			Compression: "jpeg",
-			Quality:     90,
+			InFile:           fromRoot("test/resources/images/ag-obj-286-0033-pub.alpha.tif"),
+			OutFile:          fromRoot("tmp/ag.alpha.tif"),
+			MaxSize:          0,
+			Compression:      "jpeg",
+			Quality:          90,
+			TargetICCProfile: iccProfile,
+			TempDir:          tempDir,
+			DeleteTemp:       true,
 		})
 		if err != nil {
 			t.Errorf("RemoveAlpha - %v", err)
@@ -33,11 +39,13 @@ func TestConvert(t *testing.T) {
 
 	t.Run("ConvertJPEG", func(t *testing.T) {
 		_, err := a.Convert(input.Params{
-			InFile:      fromRoot("test/resources/images/ag-obj-286-0033-pub.jpg"),
-			OutFile:     fromRoot("tmp/ag.jpg.tif"),
-			MaxSize:     0,
-			Compression: "jpeg",
-			Quality:     90,
+			InFile:           fromRoot("test/resources/images/ag-obj-286-0033-pub.jpg"),
+			OutFile:          fromRoot("tmp/ag.jpg.tif"),
+			MaxSize:          0,
+			Compression:      "jpeg",
+			Quality:          90,
+			TargetICCProfile: iccProfile,
+			TempDir:          tempDir,
 		})
 		if err != nil {
 			t.Errorf("ConvertJPEG - %v", err)

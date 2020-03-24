@@ -8,4 +8,6 @@ type Params struct {
 	Compression      string // compression method ("jpeg", "lzw", "")
 	Quality          int    // JPEG quality (1-100)
 	TargetICCProfile string // file path of the profile
+	TempDir          string // path of directory where temporary files will be stored
+	DeleteTemp       bool   // delete temp dir after conversion is done
 }
