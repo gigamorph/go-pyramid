@@ -186,7 +186,7 @@ func (a *Agent) initialResize(c *context.Context, inFile string) (w, h uint, err
 		}
 	} else {
 		// Resize original to maxSize.
-		err = v.Resize(inFile, top, w, h)
+		err = v.ResizeTIFF(inFile, top, w, h)
 		if err != nil {
 			log.Printf("ERROR Context#toPyramid - %v\n", err)
 		}
@@ -206,7 +206,7 @@ func (a *Agent) createSubImages(c *context.Context, w, h uint) (err error) {
 		inFile := fmt.Sprintf("%s_%d.tif", c.TmpFilePrefix, depth-1)
 		outFile := fmt.Sprintf("%s_%d.tif", c.TmpFilePrefix, depth)
 
-		if err = v.Resize(inFile, outFile, w, h); err != nil {
+		if err = v.ResizeTIFF(inFile, outFile, w, h); err != nil {
 			return err
 		}
 		w /= 2

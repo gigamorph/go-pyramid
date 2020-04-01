@@ -49,18 +49,18 @@ func (v *VIPS) ToTiff(inFile, outFile string) error {
 	return nil
 }
 
-// Resize the image.
-func (v *VIPS) Resize(inFile, outFile string, width, height uint) error {
+// ResizeTIFF resizes the image
+func (v *VIPS) ResizeTIFF(inFile, outFile string, width, height uint) error {
 	image, err := vips.Thumbnail(inFile, int(width),
 		vips.InputInt("height", int(height)),
 	)
 	if err != nil {
-		return fmt.Errorf("VIPS#Resize failed to create thumbnail - %v", err)
+		return fmt.Errorf("VIPS#ResizeTIFF failed to create thumbnail - %v", err)
 	}
 
 	err = vips.Tiffsave(image, outFile)
 	if err != nil {
-		return fmt.Errorf("VIPS#Resize failed to save tiff - %v", err)
+		return fmt.Errorf("VIPS#ResizeTIFF failed to save tiff - %v", err)
 	}
 	return nil
 }
