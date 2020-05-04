@@ -36,6 +36,16 @@ func (im *IM) Finalize() {
 	imagick.Terminate()
 }
 
+// PingImage is like ReadImage except the only valid information returned is
+// the image width, height, size, and format.
+func (im *IM) PingImage(fpath string) error {
+	err := im.mw.PingImage(fpath)
+	if err != nil {
+		return fmt.Errorf("IM#PingImage failed - %v", err)
+	}
+	return nil
+}
+
 // ReadImage reads image into memory for further operation
 func (im *IM) ReadImage(fpath string) error {
 	err := im.mw.ReadImage(fpath)
