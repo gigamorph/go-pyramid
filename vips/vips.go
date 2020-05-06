@@ -43,6 +43,7 @@ func (v *VIPS) ToTiff(inFile, outFile string) error {
 	if err != nil {
 		return fmt.Errorf("VIPS#ToTiff failed to read image - %v", err)
 	}
+	defer image.Close()
 	err = vips.Tiffsave(image.Image(), outFile)
 	if err != nil {
 		return fmt.Errorf("VIPS#ToTiff failed to save tiff - %v", err)
@@ -72,6 +73,7 @@ func (v *VIPS) RemoveAlpha(inFile, outFile string) error {
 	if err != nil {
 		return fmt.Errorf("VIPS#ToTiff failed to read image - %v", err)
 	}
+	defer image.Close()
 	outImage, err := vips.ExtractBand(image.Image(), 0, vips.InputInt("n", 3))
 	if err != nil {
 		return fmt.Errorf("VIPS#ToTiff failed to extract bands - %v", err)
@@ -90,6 +92,7 @@ func (v *VIPS) ICCTransformFile(inFile, outFile, outProfilePath string) error {
 	if err != nil {
 		return fmt.Errorf("VIPS#ICCTransformFile failed to read image - %v", err)
 	}
+	defer image.Close()
 
 	log.Printf("VIPS#ICCTransformFile transforming\n")
 
