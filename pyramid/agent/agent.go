@@ -61,7 +61,10 @@ func (a *Agent) Convert(p input.Params) (*output.Params, error) {
 		return nil, fmt.Errorf("Agent#Convert PyramidTIFF failed - %v", err)
 	}
 	if p.DeleteTemp {
-		os.RemoveAll(context.Input.TempDir)
+		err = os.RemoveAll(context.Input.TempDir)
+		if err != nil {
+			log.Printf("ERROR pyramid.agent.Agent#Convert failed to delete temp dir %s - %v\n", context.Input.TempDir, err)
+		}
 	}
 	return &context.Output, nil
 }
@@ -137,7 +140,7 @@ func (a *Agent) toPyramidTIFF(c *context.Context) (err error) {
 	}
 
 	if !newProfile && iccProfileName != "" {
-		fmt.Printf("ICC transform %s -> %s\n", c.GrayFixedFile, c.ProfileFixedFile)
+		fmt.Printf("ICC transform %s -> %s (%s)\n", c.GrayFixedFile, c.ProfileFixedFile, targetICCProfile)
 		if err = a.vips.ICCTransformFile(c.GrayFixedFile, c.ProfileFixedFile, targetICCProfile); err != nil {
 			return fmt.Errorf("Agent#toPyramidTIFF ICCTransform failed - %v", err)
 		}
@@ -199,10 +202,7 @@ func (a *Agent) createSubImages(c *context.Context, w, h uint) (err error) {
 	v := a.vips
 	depth := 1
 
-	fmt.Printf("SUB %d %d\n", w, h)
-
 	for w, h, depth = w/2, h/2, 1; w > 0 && h > 0 && (w > 127 || h > 127); depth++ {
-		fmt.Printf("SUB %d %d\n", w, h)
 		inFile := fmt.Sprintf("%s_%d.tif", c.TmpFilePrefix, depth-1)
 		outFile := fmt.Sprintf("%s_%d.tif", c.TmpFilePrefix, depth)
 
@@ -237,10 +237,11 @@ func (a *Agent) validateChannels(channels imagick.ColorspaceType) bool {
 	}
 }
 
-func (a *Agent) mkdirp(d string) {
-	log.Printf("Making sure directory %s exists", d)
+func (a *Agent) mkdirp(d string) error {
+	log.Printf("pyramid.agent.Agent#mkdirp making sure directory %s exists", d)
 	err := os.MkdirAll(d, 0700)
 	if err != nil {
-		panic(fmt.Errorf("pyramid.Agent#mkdirp failed to create directory %s - %v", d, err))
+		return fmt.Errorf("pyramid.Agent#mkdirp failed to create directory %s - %v", d, err)
 	}
+	return nil
 }

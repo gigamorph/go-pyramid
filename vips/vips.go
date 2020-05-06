@@ -6,6 +6,7 @@ import "C"
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/davidbyttow/govips/pkg/vips"
 )
@@ -84,10 +85,13 @@ func (v *VIPS) RemoveAlpha(inFile, outFile string) error {
 
 // ICCTransformFile performs ICC profile conversion
 func (v *VIPS) ICCTransformFile(inFile, outFile, outProfilePath string) error {
+	log.Printf("VIPS#ICCTransformFile\n")
 	image, err := vips.NewImageFromFile(inFile)
 	if err != nil {
 		return fmt.Errorf("VIPS#ICCTransformFile failed to read image - %v", err)
 	}
+
+	log.Printf("VIPS#ICCTransformFile transforming\n")
 
 	// Default intent is VIPS_INTENT_RELATIVE:
 	// see https://libvips.github.io/libvips/API/current/libvips-resample.html
@@ -96,10 +100,13 @@ func (v *VIPS) ICCTransformFile(inFile, outFile, outProfilePath string) error {
 	if err != nil {
 		return fmt.Errorf("VIPS#ICCTransformFile failed to transform - %v", err)
 	}
+
+	log.Printf("VIPS#ICCTransformFile saving\n")
 	err = vips.Tiffsave(outImage, outFile)
 	if err != nil {
 		return fmt.Errorf("VIPS#ICCTransformFile failed to save image - %v", err)
 	}
+	log.Printf("VIPS#ICCTransformFile done\n")
 	return nil
 }
 
