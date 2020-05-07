@@ -38,7 +38,7 @@ func main() {
 	vips := vips.GetVIPS()
 	defer vips.Finalize()
 
-	a := agent.New(im, vips)
+	a := agent.New()
 
 	_, err := a.Convert(params)
 	if err != nil {

@@ -16,7 +16,7 @@ func TestConvert(t *testing.T) {
 	vips := vips.GetVIPS()
 	defer vips.Finalize()
 
-	a := New(im, vips)
+	a := New()
 
 	tempDir := "/tmp/go-pyramid-test"
 	iccProfile := fromRoot("test/resources/sRGBProfile.icc")

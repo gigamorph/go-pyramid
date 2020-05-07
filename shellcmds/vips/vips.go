@@ -1,12 +1,56 @@
-package shellcmds
+package vips
 
 import (
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/gigamorph/go-pyramid/config"
 	"github.com/gigamorph/go-pyramid/util"
 )
+
+// Width returns the pixel width of the imaage
+func Width(fpath string) (w uint, err error) {
+	var out string
+	var width int64
+
+	args := []string{
+		"-f",
+		"width",
+		fmt.Sprintf("%s[0]", fpath),
+	}
+
+	if out, err = util.Exec(config.VIPSHeader, args); err != nil {
+		return 0, err
+	}
+
+	if width, err = strconv.ParseInt(out, 10, 64); err != nil {
+		return 0, err
+	}
+
+	return uint(width), err
+}
+
+// Height returns the pixel width of the imaage.
+func Height(fpath string) (h uint, err error) {
+	var out string
+	var height int64
+
+	args := []string{
+		"-f", "height",
+		fmt.Sprintf("%s[0]", fpath),
+	}
+
+	if out, err = util.Exec(config.VIPSHeader, args); err != nil {
+		return 0, err
+	}
+
+	if height, err = strconv.ParseInt(out, 10, 64); err != nil {
+		return 0, err
+	}
+
+	return uint(height), err
+}
 
 // RemoveAlpha strippes the alpha channel from inFile.
 func RemoveAlpha(inFile, outFile string) error {
@@ -17,7 +61,6 @@ func RemoveAlpha(inFile, outFile string) error {
 		"0",
 		"3",
 	}
-
 	_, err := util.Exec(config.VIPS, args)
 	return err
 }
@@ -89,28 +132,4 @@ func ToTiff(inFile, outFile string) error {
 	}
 	_, err := util.Exec(config.VIPS, args)
 	return err
-}
-
-// BuildPyramid contcatenates tiles into one pyramid TIFF
-func BuildPyramid(inFiles []string, outFile string, options map[string]string) (err error) {
-	args := make([]string, 0, 32)
-
-	// c: compression. e.g.) "jpeg:90"
-	if c := options["c"]; c != "" {
-		args = append(args, "-c", c)
-	}
-
-	args = append(args,
-		"-t",        // output to tiles
-		"-w", "256", // tile width
-		"-l", "256", // tile length
-	)
-	args = append(args, inFiles...)
-	args = append(args, outFile)
-
-	_, err = util.Exec(config.TIFFCopy, args)
-	if err != nil {
-		return fmt.Errorf("shellcmds.BuildPyramid util.Exec failed - %v", err)
-	}
-	return nil
 }
