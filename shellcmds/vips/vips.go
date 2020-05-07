@@ -89,7 +89,7 @@ func FixGray(inFile, outFile string) error {
 		inFile,
 		fmt.Sprintf("--eprofile=%s", config.TargetICCProfileIIIF),
 		"--size", fmt.Sprintf("%dx%d", w, h),
-		"--intent", "perceptual",
+		"--intent", "relative",
 		"-o", fmt.Sprintf("%s[compression=none,strip]", outFile),
 	}
 	_, err = util.Exec(config.VIPSThumbnail, args)
@@ -106,7 +106,7 @@ func ICCTransform(inFile, outFile, iccProfile string) error {
 		config.TargetICCProfileIIIF,
 		"--embedded",
 		"--input-profile", iccProfile,
-		"--intent", "perceptual",
+		"--intent", "relative",
 	}
 	_, err := util.Exec(config.VIPS, args)
 	return err
