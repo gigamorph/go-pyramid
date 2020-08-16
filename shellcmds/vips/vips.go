@@ -103,9 +103,9 @@ func ICCTransform(inFile, outFile, iccProfile string) error {
 		inFile,
 		//fmt.Sprintf("%s[compression=none,strip]", outFile),
 		fmt.Sprintf("%s[compression=none]", outFile),
-		config.TargetICCProfileIIIF,
+		iccProfile,
 		"--embedded",
-		"--input-profile", iccProfile,
+		"--input-profile", config.TargetICCProfileIIIF,
 		"--intent", "relative",
 	}
 	_, err := util.Exec(config.VIPS, args)
