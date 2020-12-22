@@ -4,18 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/gigamorph/go-pyramid/imagemagick"
 	"github.com/gigamorph/go-pyramid/pyramid/input"
-	"github.com/gigamorph/go-pyramid/vips"
 )
 
 func TestConvert(t *testing.T) {
-	im := imagemagick.GetIM()
-	defer im.Finalize()
-
-	vips := vips.GetVIPS()
-	defer vips.Finalize()
-
 	a := New()
 
 	tempDir := "/tmp/go-pyramid-test"

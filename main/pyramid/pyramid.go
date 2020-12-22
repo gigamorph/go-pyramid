@@ -1,19 +1,22 @@
+// Usage:
+// go run pyramid.go [options] <infile> <outfile>
+// options: -m, -c, -q, -p, -t (see main function below)
 package main
 
 import (
 	"flag"
 	"log"
 
-	"github.com/gigamorph/go-pyramid/imagemagick"
 	"github.com/gigamorph/go-pyramid/pyramid/agent"
 	"github.com/gigamorph/go-pyramid/pyramid/input"
-	"github.com/gigamorph/go-pyramid/vips"
 )
 
 func main() {
 	maxSizePtr := flag.Uint("m", 0, "max size")
 	compressionPtr := flag.String("c", "", "compression method")
 	qualityPtr := flag.Int("q", 90, "jpeg quality (1-100)")
+	targetProfilePtr := flag.String("p", "test/resources/sRGBProfile.icc", "ICC profile of target file")
+	tempDirPtr := flag.String("t", "/tmp/go-pyramid", "path to temp dir")
 	flag.Parse()
 
 	args := flag.Args()
@@ -25,24 +28,19 @@ func main() {
 	log.Printf("maxSize: %d\n", *maxSizePtr)
 
 	params := input.Params{
-		InFile:      inFile,
-		OutFile:     outFile,
-		MaxSize:     *maxSizePtr,
-		Compression: *compressionPtr,
-		Quality:     *qualityPtr,
+		InFile:           inFile,
+		OutFile:          outFile,
+		MaxSize:          *maxSizePtr,
+		Compression:      *compressionPtr,
+		Quality:          *qualityPtr,
+		TargetICCProfile: *targetProfilePtr,
+		TempDir:          *tempDirPtr,
 	}
 
-	im := imagemagick.GetIM()
-	defer im.Finalize()
+	ag := agent.New()
 
-	vips := vips.GetVIPS()
-	defer vips.Finalize()
-
-	a := agent.New()
-
-	_, err := a.Convert(params)
+	_, err := ag.Convert(params)
 	if err != nil {
 		log.Printf("ERROR main agent.Convert failed - %v", err)
 	}
-	//log.Printf("Output: %v\n", out)
 }

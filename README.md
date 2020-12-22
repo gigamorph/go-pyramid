@@ -1,14 +1,13 @@
 # go-pyramid
-Convert images to pyramidal TIFF
+Convert images to pyramidal TIFF.
 
-## Dependencies
-* [Imagick](https://github.com/gographics/imagick)
-* [govips](https://github.com/davidbyttow/govips)
+It depends entirely on shell invoked programs for its operations.
+The `explore-cgo` branch tries to incorporate C libraries but is practically abandoned at the moment.
 
 ## Running as Standalone
 
 ```bash
-go run bin/pyramid/pyramid.go [<options>] <infile> <outfile>
+go run main/pyramid/pyramid.go [<options>] <infile> <outfile>
 ```
 
 ### Options
