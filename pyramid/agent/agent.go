@@ -63,6 +63,9 @@ func (a *Agent) toPyramidTIFF(c *context.Context) (err error) {
 	if err = vips.ToTiff(fmt.Sprintf("%s[0]", c.Input.InFile), c.TiffFile); err != nil {
 		return fmt.Errorf("pyramid.agent.Agent#ToPyramidTIFF failed to convert %s to TIFF - %v", c.Input.InFile, err)
 	}
+	if err != nil {
+		return fmt.Errorf("pyramid.agent.Agent#ToPyramidTIFF failed to convert to tiff - %v", err)
+	}
 
 	tiff := c.TiffFile
 
