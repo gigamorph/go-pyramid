@@ -117,7 +117,7 @@ func Resize(inFile, outFile string, width, height uint) error {
 	args := []string{
 		inFile,
 		"--size", fmt.Sprintf("%dx%d!", width, height),
-		"-o", fmt.Sprintf("%s[compression=none]", outFile),
+		"-o", outFile,
 	}
 	_, err := util.Exec(config.VIPSThumbnail, args)
 	return err
