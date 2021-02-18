@@ -124,7 +124,7 @@ func (a *Agent) toPyramidTIFF(c *context.Context) (err error) {
 	// convert between the profiles.
 	if channels == "gray" && (iccProfileName == "" || iccProfileName == "sRGB Profile") {
 		log.Printf("Fixing gray image %s with profile [%s]", c.NoalphaFile, iccProfileName)
-		err = vips.FixGray(fmt.Sprintf("%s[0]", c.NoalphaFile), c.GrayFixedFile)
+		err = vips.FixGray(fmt.Sprintf("%s", c.NoalphaFile), c.GrayFixedFile)
 		if err != nil {
 			return fmt.Errorf("Agent#toPyramidTIFF FixGray failed - %v", err)
 		}
