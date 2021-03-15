@@ -81,22 +81,12 @@ func (a *Agent) toPyramidTIFF(c *context.Context) (err error) {
 	c.Output.InputWidth = c.Width
 	c.Output.InputHeight = c.Height
 
-	channels, err := im.Channels(tiff)
+	imageFormat, channels, iccProfileName, err := im.GetInfo(tiff)
 	if err != nil {
-		return fmt.Errorf("pyramid.agent.Agent#toPyramidTIFF failed get channels from %s - %v", tiff, err)
+		return fmt.Errorf("pyramid.agent.Agent#toPyramidTIFF failed get info from %s - %v", tiff, err)
 	}
 
-	imageFormat, err := im.ImageFormat(c.TiffFile)
-	if err != nil {
-		return fmt.Errorf("pyramid.agent.Agent#toPyramidTIFF failed get image format from %s - %v", tiff, err)
-	}
-
-	iccProfileName, err := im.ICCProfile(tiff)
-	if err != nil {
-		return fmt.Errorf("pyramid.agent.Agent#toPyramidTIFF failed get icc profile from %s - %v", tiff, err)
-	}
-
-	log.Printf("channels: %s, imageFormat: %s, profile: %s\n", channels, imageFormat, iccProfileName)
+	log.Printf("imageFormat: %s, channels: %s, profile: %s\n", imageFormat, channels, iccProfileName)
 
 	// Check if channels is supported
 	if valid := a.validateChannels(channels); !valid {
