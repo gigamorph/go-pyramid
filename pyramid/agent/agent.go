@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/gigamorph/go-pyramid/config"
 	"github.com/gigamorph/go-pyramid/pyramid/context"
@@ -127,8 +128,11 @@ func (a *Agent) toPyramidTIFF(c *context.Context) (err error) {
 		log.Printf("WARNING icc profile not available for image %s - profile won't be converted\n", c.GrayFixedFile)
 	}
 
-	// Excluding "sRGB.icc" because vips complains sRGBProfile.icc is incompatible with the image
-	if !newProfile && iccProfileName != "" && iccProfileName != "sRGB.icc" {
+	// Some notes:
+	// - If no ICC profile is embedded, browsers will usually assume the image is in sRGB.
+	// - When ICC profile description string is "sRGB.icc", vips complained it is not complained that
+	//   it is not compatible with the the destination profile (sRGB IEC61966-2.1).
+	if !newProfile && iccProfileName != "" && !strings.HasPrefix(strings.ToLower(iccProfileName), "srgb") {
 		fmt.Printf("ICC transform %s -> %s (%s)\n", c.GrayFixedFile, c.ProfileFixedFile, targetICCProfile)
 		err = vips.ICCTransform(fmt.Sprintf("%s[0]", c.GrayFixedFile), c.ProfileFixedFile, targetICCProfile)
 		if err != nil {

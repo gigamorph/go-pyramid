@@ -26,7 +26,7 @@ func BuildPyramid(inFiles []string, outFile string, options map[string]string) (
 
 	_, err = util.Exec(config.TIFFCopy, args)
 	if err != nil {
-		return fmt.Errorf("shellcmds.BuildPyramid util.Exec failed - %v", err)
+		return fmt.Errorf("tiff.BuildPyramid util.Exec failed - %v", err)
 	}
 	return nil
 }
