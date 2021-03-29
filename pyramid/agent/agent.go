@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/gigamorph/go-pyramid/config"
@@ -82,10 +83,15 @@ func (a *Agent) toPyramidTIFF(c *context.Context) (err error) {
 	c.Output.InputWidth = c.Width
 	c.Output.InputHeight = c.Height
 
-	imageFormat, channels, iccProfileName, err := im.GetInfo(tiff)
+	imageFormat, channels, depth, iccProfileName, err := im.GetInfo(tiff)
 	if err != nil {
 		return fmt.Errorf("pyramid.agent.Agent#toPyramidTIFF failed get info from %s - %v", tiff, err)
 	}
+	depth64, err := strconv.ParseUint(depth, 10, 64)
+	if err != nil {
+		return fmt.Errorf("pyramid.agent.Agent#toPyramidTIFF failed to parse depth - %v", err)
+	}
+	c.BitDepth = uint(depth64)
 
 	log.Printf("imageFormat: %s, channels: %s, profile: %s\n", imageFormat, channels, iccProfileName)
 
@@ -211,8 +217,14 @@ func (a *Agent) createSubImages(c *context.Context, w, h uint) (err error) {
 func (a *Agent) combineSubImages(c *context.Context) error {
 	inFiles, err := filepath.Glob(fmt.Sprintf("%s_*.tif", c.TmpFilePrefix))
 
+	compression := c.CompressionOption()
+	if c.BitDepth > 8 {
+		compression = "" // no compression for depth 16 images (jpeg can't handle 16 bit)
+		log.Printf("WARNING: JPEG can't handle 16 bit images, so no compression applied\n")
+	}
+
 	err = tiff.BuildPyramid(inFiles, c.Input.OutFile, map[string]string{
-		"c": c.CompressionOption(),
+		"c": compression,
 	})
 
 	if err != nil {

@@ -57,16 +57,16 @@ func ICCProfile(fpath string) (iccProfile string, err error) {
 
 // GetInfo returns multiple information from identify.
 // Running identify for those separately is very costly for large images.
-func GetInfo(fpath string) (string, string, string, error) {
+func GetInfo(fpath string) (string, string, string, string, error) {
 	args := []string{
-		"-format", "%[m]|%[channels]|%[profile:icc]",
+		"-format", "%[m]|%[channels]|%[bit-depth]|%[profile:icc]",
 		fmt.Sprintf("%s[0]", fpath),
 	}
 
 	out, err := util.Exec(config.Identify, args)
 	if err != nil {
-		return "", "", "", fmt.Errorf("imagemagick.GetInfo failed - %v", err)
+		return "", "", "", "", fmt.Errorf("imagemagick.GetInfo failed - %v", err)
 	}
 	values := strings.Split(out, "|")
-	return values[0], values[1], values[2], err
+	return values[0], values[1], values[2], values[3], err
 }

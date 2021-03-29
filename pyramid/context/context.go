@@ -22,6 +22,7 @@ type Context struct {
 	ProfileFixedFile string
 	Width            uint // original width
 	Height           uint // original height
+	BitDepth         uint // original bit depth, e.g. 8, 16
 }
 
 // New returns a new instance of Context.
@@ -35,6 +36,10 @@ func New(p input.Params) *Context {
 	c.Input = p
 	if c.Input.TempDir == "" {
 		c.Input.TempDir = fmt.Sprintf("%s/cds2-scaler", os.TempDir())
+	}
+	if c.Input.Compression == "" {
+		c.Input.Compression = "jpeg"
+		c.Input.Quality = 90
 	}
 	c.TmpFilePrefix = fmt.Sprintf("%s/%s", c.Input.TempDir, name)
 	c.TiffFile = fmt.Sprintf("%s.tif", c.TmpFilePrefix)
