@@ -159,16 +159,16 @@ func (a *Agent) createPyramid(c *context.Context, inFile, outFile string) (err e
 	var w, h uint
 
 	if w, h, err = a.initialResize(c, inFile); err != nil {
-		return fmt.Errorf("Agent#createTIFF initialResize failed - %v", err)
+		return fmt.Errorf("Agent#createPyramid initialResize failed - %v", err)
 	}
 	c.Output.OutputWidth = w
 	c.Output.OutputHeight = h
 
 	if err = a.createSubImages(c, w, h); err != nil {
-		return fmt.Errorf("Agent#createTIFF createSubImages failed - %v", err)
+		return fmt.Errorf("Agent#createPyramid createSubImages failed - %v", err)
 	}
 	if err = a.combineSubImages(c); err != nil {
-		return fmt.Errorf("Agent#createTIFF combineImages failed - %v", err)
+		return fmt.Errorf("Agent#createPyramid combineImages failed - %v", err)
 	}
 	return nil
 }

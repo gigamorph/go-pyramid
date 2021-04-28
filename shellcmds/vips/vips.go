@@ -123,6 +123,19 @@ func Resize(inFile, outFile string, width, height uint) error {
 	return err
 }
 
+// ResizeBoundedNoExpand resizes the image to fit the bounding box of width x height
+// with aspect ratio preserved, but does not resize it if the source image
+// is smaller
+func ResizeBoundedNoExpand(inFile, outFile string, width, height uint) error {
+	args := []string{
+		inFile,
+		"--size", fmt.Sprintf("%dx%d>", width, height),
+		"-o", outFile,
+	}
+	_, err := util.Exec(config.VIPSThumbnail, args)
+	return err
+}
+
 // ToTiff converts inFile to TIFF format.
 func ToTiff(inFile, outFile string) error {
 	args := []string{
