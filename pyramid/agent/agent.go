@@ -97,7 +97,7 @@ func (a *Agent) toPyramidTIFF(c *context.Context) (err error) {
 
 	// Check if channels is supported
 	if valid := a.validateChannels(channels); !valid {
-		return fmt.Errorf("Image %s has channels %s which is not supported at this time",
+		return fmt.Errorf("image %s has channels %s which is not supported at this time",
 			tiff, channels)
 	}
 
@@ -106,6 +106,10 @@ func (a *Agent) toPyramidTIFF(c *context.Context) (err error) {
 	if channels == "srgba" {
 		if err = vips.RemoveAlpha(tiff, c.NoalphaFile); err != nil {
 			return fmt.Errorf("Agent#toPyramidTIFF RemoveAlpha failed - %v", err)
+		}
+	} else if channels == "graya" {
+		if err = vips.RemoveAlphaFromGraya(tiff, c.NoalphaFile); err != nil {
+			return fmt.Errorf("Agent#toPyramidTIFF RemoveAlphaGraya failed - %v", err)
 		}
 	} else {
 		c.NoalphaFile = tiff
@@ -121,7 +125,7 @@ func (a *Agent) toPyramidTIFF(c *context.Context) (err error) {
 	// convert between the profiles.
 	if channels == "gray" && (iccProfileName == "" || iccProfileName == "sRGB Profile") {
 		log.Printf("Fixing gray image %s with profile [%s]", c.NoalphaFile, iccProfileName)
-		err = vips.FixGray(fmt.Sprintf("%s", c.NoalphaFile), c.GrayFixedFile)
+		err = vips.FixGray(c.NoalphaFile, c.GrayFixedFile)
 		if err != nil {
 			return fmt.Errorf("Agent#toPyramidTIFF FixGray failed - %v", err)
 		}
@@ -235,7 +239,7 @@ func (a *Agent) combineSubImages(c *context.Context) error {
 
 func (a *Agent) validateChannels(channels string) bool {
 	switch channels {
-	case "srgb", "gray", "cmyk", "srgba":
+	case "srgb", "gray", "cmyk", "srgba", "graya":
 		return true
 	default:
 		return false

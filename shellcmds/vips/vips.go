@@ -65,6 +65,19 @@ func RemoveAlpha(inFile, outFile string) error {
 	return err
 }
 
+// RemoveAlphaFromGraya strippes the alpha channel from a greyscale with alpha
+func RemoveAlphaFromGraya(inFile, outFile string) error {
+	args := []string{
+		"im_extract_bands",
+		inFile,
+		outFile,
+		"0",
+		"1",
+	}
+	_, err := util.Exec(config.VIPS, args)
+	return err
+}
+
 // FixGray fixes some issues with "gray" images.
 //
 // In the case of gray with no embedded color profile or with an embedded
