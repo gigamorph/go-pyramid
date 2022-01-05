@@ -85,7 +85,7 @@ func RemoveAlphaFromGraya(inFile, outFile string) error {
 // we can't just apply sRGB with the icc_transform because sRGB isn't
 // an appropriate profile for the icc_transform command so we have to
 // call vipsthumbnail instead which does some magick behind the scenes
-// to properly convert between the profiles.
+// to properly convert between the profiles - per Dave Beaudet @NGA
 func FixGray(inFile, outFile string) error {
 	var w, h uint
 	var err error

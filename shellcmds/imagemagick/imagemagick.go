@@ -2,9 +2,11 @@ package imagemagick
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/gigamorph/go-pyramid/config"
+	"github.com/gigamorph/go-pyramid/shellcmds/vips"
 	"github.com/gigamorph/go-pyramid/util"
 )
 
@@ -69,4 +71,27 @@ func GetInfo(fpath string) (string, string, string, string, error) {
 	}
 	values := strings.Split(out, "|")
 	return values[0], values[1], values[2], values[3], err
+}
+
+func GrayToSRGB(inFile, outFile string) error {
+	var w, h uint
+	var err error
+
+	if w, err = vips.Width(inFile); err != nil {
+		return err
+	}
+	if h, err = vips.Height(inFile); err != nil {
+		return err
+	}
+	log.Printf("width: %d, height: %d", w, h)
+
+	args := []string{
+		inFile,
+		fmt.Sprintf("--eprofile=%s", config.TargetICCProfileIIIF),
+		"--size", fmt.Sprintf("%dx%d", w, h),
+		"--intent", "relative",
+		"-o", fmt.Sprintf("%s[compression=none,strip]", outFile),
+	}
+	_, err = util.Exec(config.VIPSThumbnail, args)
+	return err
 }

@@ -17,6 +17,9 @@ var TempDir = getEnv("GO_PYRAMID_TEMP_DIR")
 // Identify is the path to identify (of ImageMagick).
 var Identify = getEnv("IDENTIFY")
 
+// Convert is the path to convert (of ImageMagick).
+var Convert = getEnv("CONVERT")
+
 // TIFFCopy is the path to tiffcp
 var TIFFCopy = getEnv("TIFFCP")
 

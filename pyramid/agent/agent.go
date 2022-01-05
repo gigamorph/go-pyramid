@@ -12,6 +12,7 @@ import (
 	"github.com/gigamorph/go-pyramid/pyramid/context"
 	"github.com/gigamorph/go-pyramid/pyramid/input"
 	"github.com/gigamorph/go-pyramid/pyramid/output"
+	"github.com/gigamorph/go-pyramid/shellcmds/combined"
 	im "github.com/gigamorph/go-pyramid/shellcmds/imagemagick"
 	"github.com/gigamorph/go-pyramid/shellcmds/tiff"
 	"github.com/gigamorph/go-pyramid/shellcmds/vips"
@@ -93,7 +94,7 @@ func (a *Agent) toPyramidTIFF(c *context.Context) (err error) {
 	}
 	c.BitDepth = uint(depth64)
 
-	log.Printf("imageFormat: %s, channels: %s, profile: %s\n", imageFormat, channels, iccProfileName)
+	log.Printf("imageFormat: %s, channels: %s, profile: %s for %s\n", imageFormat, channels, iccProfileName, tiff)
 
 	// Check if channels is supported
 	if valid := a.validateChannels(channels); !valid {
@@ -128,6 +129,13 @@ func (a *Agent) toPyramidTIFF(c *context.Context) (err error) {
 		err = vips.FixGray(c.NoalphaFile, c.GrayFixedFile)
 		if err != nil {
 			return fmt.Errorf("Agent#toPyramidTIFF FixGray failed - %v", err)
+		}
+		newProfile = true
+	} else if channels == "gray" && iccProfileName == "Adobe RGB (1998)" {
+		log.Printf("Converting gray image %s to sRGB", c.NoalphaFile)
+		err = combined.GrayToSRGB(c.NoalphaFile, c.GrayFixedFile)
+		if err != nil {
+			return fmt.Errorf("Agent#toPyramidTIFF GrayToSRGB failed - %v", err)
 		}
 		newProfile = true
 	} else {
@@ -188,14 +196,14 @@ func (a *Agent) initialResize(c *context.Context, inFile string) (w, h uint, err
 		// Use the original size since it isn't bigger than maxSize.
 		log.Printf("Copying %s to %s\n", inFile, top)
 		if _, err = util.CopyFile(inFile, top); err != nil {
-			log.Printf("ERROR Context#toPyramid copyFile failed - %v\n", err)
+			log.Printf("ERROR initialResize CopyFile failed for %s - %v\n", inFile, err)
 			return w, h, err
 		}
 	} else {
 		// Resize original to maxSize.
 		err = vips.Resize(inFile0, top, w, h)
 		if err != nil {
-			log.Printf("ERROR Context#toPyramid - %v\n", err)
+			log.Printf("ERROR initialResize Resize failed for %s - %v\n", inFile0, err)
 		}
 	}
 	return w, h, err
@@ -220,11 +228,14 @@ func (a *Agent) createSubImages(c *context.Context, w, h uint) (err error) {
 
 func (a *Agent) combineSubImages(c *context.Context) error {
 	inFiles, err := filepath.Glob(fmt.Sprintf("%s_*.tif", c.TmpFilePrefix))
+	if err != nil {
+		return fmt.Errorf("combineSubImages failed to get list of files for %s - %v", c.TmpFilePrefix, err)
+	}
 
 	compression := c.CompressionOption()
 	if c.BitDepth > 8 {
 		compression = "" // no compression for depth 16 images (jpeg can't handle 16 bit)
-		log.Printf("WARNING: JPEG can't handle 16 bit images, so no compression applied\n")
+		log.Printf("WARNING: JPEG can't handle 16 bit images, so no compression applied for %s\n", inFiles[0])
 	}
 
 	err = tiff.BuildPyramid(inFiles, c.Input.OutFile, map[string]string{

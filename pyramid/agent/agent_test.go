@@ -43,6 +43,22 @@ func TestConvert(t *testing.T) {
 			t.Errorf("ConvertJPEG - %v", err)
 		}
 	})
+
+	t.Run("GrayscaleWithAdobeRGB", func(t *testing.T) {
+		_, err := a.Convert(input.Params{
+			InFile:           fromRoot("test/resources/images/grayscale-with-adobe-rgb-1998.tif"),
+			OutFile:          fromRoot("tmp/gray-adobe-rgb.tif"),
+			MaxSize:          0,
+			Compression:      "jpeg",
+			Quality:          90,
+			TargetICCProfile: iccProfile,
+			TempDir:          tempDir,
+			DeleteTemp:       true,
+		})
+		if err != nil {
+			t.Errorf("GrayscaleWithAdobeRGB - %v", err)
+		}
+	})
 }
 
 func fromRoot(relPath string) string {
