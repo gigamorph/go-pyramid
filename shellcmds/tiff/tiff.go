@@ -20,6 +20,7 @@ func BuildPyramid(inFiles []string, outFile string, options map[string]string) (
 		"-t",        // output to tiles
 		"-w", "256", // tile width
 		"-l", "256", // tile length
+		"-m", "12288", // maximum memory allocation size in MiB
 	)
 	args = append(args, inFiles...)
 	args = append(args, outFile)
