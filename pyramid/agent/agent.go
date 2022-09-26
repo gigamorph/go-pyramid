@@ -16,7 +16,6 @@ import (
 	im "github.com/gigamorph/go-pyramid/shellcmds/imagemagick"
 	"github.com/gigamorph/go-pyramid/shellcmds/tiff"
 	"github.com/gigamorph/go-pyramid/shellcmds/vips"
-	"github.com/gigamorph/go-pyramid/util"
 )
 
 // Agent is a wrapper around tools and operations used to convert
@@ -192,20 +191,12 @@ func (a *Agent) initialResize(c *context.Context, inFile string) (w, h uint, err
 	top := fmt.Sprintf("%s_0.tif", c.TmpFilePrefix)
 	inFile0 := fmt.Sprintf("%s[0]", inFile)
 
-	if w == c.Width {
-		// Use the original size since it isn't bigger than maxSize.
-		log.Printf("Copying %s to %s\n", inFile, top)
-		if _, err = util.CopyFile(inFile, top); err != nil {
-			log.Printf("ERROR initialResize CopyFile failed for %s - %v\n", inFile, err)
-			return w, h, err
-		}
-	} else {
-		// Resize original to maxSize.
-		err = vips.Resize(inFile0, top, w, h)
-		if err != nil {
-			log.Printf("ERROR initialResize Resize failed for %s - %v\n", inFile0, err)
-		}
+	// Resize original to maxSize.
+	err = vips.Resize(inFile0, top, w, h)
+	if err != nil {
+		log.Printf("ERROR initialResize Resize failed for %s - %v\n", inFile0, err)
 	}
+
 	return w, h, err
 }
 
