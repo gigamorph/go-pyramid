@@ -10,13 +10,21 @@ import (
 	"github.com/gigamorph/go-pyramid/util"
 )
 
+func tempDirArg(tempDir string) string {
+	return fmt.Sprintf("-registry:temporary-path=%s", tempDir)
+}
+
 // ImageFormat returns the "magick" value, e.g. "TIFF", "JPEG"
-func ImageFormat(fpath string) (string, error) {
+func ImageFormat(fpath string, tempDir *string) (string, error) {
 	var out string
 
 	args := []string{
 		"-format", "%[m]",
 		fmt.Sprintf("%s[0]", fpath),
+	}
+
+	if tempDir != nil {
+		args = append(args, tempDirArg(*tempDir))
 	}
 
 	out, err := util.Exec(config.Identify, args)
@@ -27,12 +35,16 @@ func ImageFormat(fpath string) (string, error) {
 }
 
 // Channels returns the channels string acquired from the image file by ImageMagick/identify.
-func Channels(fpath string) (channels string, err error) {
+func Channels(fpath string, tempDir *string) (channels string, err error) {
 	var out string
 
 	args := []string{
 		"-format", "%[channels]",
 		fmt.Sprintf("%s[0]", fpath),
+	}
+
+	if tempDir != nil {
+		args = append(args, tempDirArg(*tempDir))
 	}
 
 	if out, err = util.Exec(config.Identify, args); err != nil {
@@ -43,12 +55,16 @@ func Channels(fpath string) (channels string, err error) {
 
 // ICCProfile returns the ICC profile identifier string acquired from
 // the image by ImageMagic/identify.
-func ICCProfile(fpath string) (iccProfile string, err error) {
+func ICCProfile(fpath string, tempDir *string) (iccProfile string, err error) {
 	var out string
 
 	args := []string{
 		"-format", "%[profile:icc]",
 		fmt.Sprintf("%s[0]", fpath),
+	}
+
+	if tempDir != nil {
+		args = append(args, tempDirArg(*tempDir))
 	}
 
 	if out, err = util.Exec(config.Identify, args); err != nil {
@@ -59,10 +75,14 @@ func ICCProfile(fpath string) (iccProfile string, err error) {
 
 // GetInfo returns multiple information from identify.
 // Running identify for those separately is very costly for large images.
-func GetInfo(fpath string) (string, string, string, string, error) {
+func GetInfo(fpath string, tempDir *string) (string, string, string, string, error) {
 	args := []string{
 		"-format", "%[m]|%[channels]|%[bit-depth]|%[profile:icc]",
 		fmt.Sprintf("%s[0]", fpath),
+	}
+
+	if tempDir != nil {
+		args = append(args, tempDirArg(*tempDir))
 	}
 
 	out, err := util.Exec(config.Identify, args)
@@ -73,7 +93,7 @@ func GetInfo(fpath string) (string, string, string, string, error) {
 	return values[0], values[1], values[2], values[3], err
 }
 
-func GrayToSRGB(inFile, outFile string) error {
+func GrayToSRGB(inFile, outFile string, tempDir *string) error {
 	var w, h uint
 	var err error
 
@@ -92,6 +112,11 @@ func GrayToSRGB(inFile, outFile string) error {
 		"--intent", "relative",
 		"-o", fmt.Sprintf("%s[compression=none,strip]", outFile),
 	}
+
+	if tempDir != nil {
+		args = append(args, tempDirArg(*tempDir))
+	}
+
 	_, err = util.Exec(config.VIPSThumbnail, args)
 	return err
 }

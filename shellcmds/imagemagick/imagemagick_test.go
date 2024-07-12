@@ -8,7 +8,7 @@ import (
 
 func TestIdentify(t *testing.T) {
 	t.Run("GetInfo", func(t *testing.T) {
-		imageFormat, channels, depth, profile, err := GetInfo("../../test/resources/images/ag-obj-286-0033-pub.jpg")
+		imageFormat, channels, depth, profile, err := GetInfo("../../test/resources/images/ag-obj-286-0033-pub.jpg", nil)
 		if err != nil {
 			t.Errorf("GetInfo - %v", err)
 		}
