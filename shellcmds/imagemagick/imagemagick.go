@@ -11,7 +11,7 @@ import (
 )
 
 func tempDirArg(tempDir string) string {
-	return fmt.Sprintf("-registry:temporary-path=%s", tempDir)
+	return fmt.Sprintf("-define registry:temporary-path=%s", tempDir)
 }
 
 // ImageFormat returns the "magick" value, e.g. "TIFF", "JPEG"
