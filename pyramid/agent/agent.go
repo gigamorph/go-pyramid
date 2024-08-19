@@ -23,10 +23,11 @@ import (
 //
 // There should be only one instance of Agent running at any time.
 // A typical usage is:
-//   agent := NewAgent()
-//   agent.Initialize()
-//   defer agent.Finalize()
-//   agent.Convert(params) // params is of convert.Params type
+//
+// agent := NewAgent()
+// agent.Initialize()
+// defer agent.Finalize()
+// agent.Convert(params) // params is of convert.Params type
 type Agent struct {
 }
 
@@ -41,6 +42,10 @@ func New() *Agent {
 func (a *Agent) Convert(p input.Params) (*output.Params, error) {
 	c := context.New(p)
 	a.mkdirp(c.Input.TempDir)
+
+	if c.Input.IMTempDir != nil {
+		a.mkdirp(*c.Input.IMTempDir)
+	}
 
 	err := a.toPyramidTIFF(c)
 	if err != nil {
@@ -65,9 +70,6 @@ func (a *Agent) toPyramidTIFF(c *context.Context) (err error) {
 	if err = vips.ToTiff(fmt.Sprintf("%s[0]", c.Input.InFile), c.TiffFile); err != nil {
 		return fmt.Errorf("pyramid.agent.Agent#ToPyramidTIFF failed to convert %s to TIFF - %v", c.Input.InFile, err)
 	}
-	if err != nil {
-		return fmt.Errorf("pyramid.agent.Agent#ToPyramidTIFF failed to convert to tiff - %v", err)
-	}
 
 	tiff := c.TiffFile
 
@@ -83,7 +85,7 @@ func (a *Agent) toPyramidTIFF(c *context.Context) (err error) {
 	c.Output.InputWidth = c.Width
 	c.Output.InputHeight = c.Height
 
-	imageFormat, channels, depth, iccProfileName, err := im.GetInfo(tiff)
+	imageFormat, channels, depth, iccProfileName, err := im.GetInfo(tiff, c.Input.IMTempDir)
 	if err != nil {
 		return fmt.Errorf("pyramid.agent.Agent#toPyramidTIFF failed get info from %s - %v", tiff, err)
 	}
@@ -159,14 +161,14 @@ func (a *Agent) toPyramidTIFF(c *context.Context) (err error) {
 		c.ProfileFixedFile = c.GrayFixedFile
 	}
 
-	err = a.createPyramid(c, c.ProfileFixedFile, c.Input.OutFile)
+	err = a.createPyramid(c, c.ProfileFixedFile)
 	if err != nil {
 		return fmt.Errorf("Agent#toPyramidTIFF createPyramid failed - %v", err)
 	}
 	return nil
 }
 
-func (a *Agent) createPyramid(c *context.Context, inFile, outFile string) (err error) {
+func (a *Agent) createPyramid(c *context.Context, inFile string) (err error) {
 	var w, h uint
 
 	if w, h, err = a.initialResize(c, inFile); err != nil {

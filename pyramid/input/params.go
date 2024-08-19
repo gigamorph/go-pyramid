@@ -9,5 +9,10 @@ type Params struct {
 	Quality          int    // JPEG quality (1-100)
 	TargetICCProfile string // file path of the profile
 	TempDir          string // path of directory where temporary files will be stored
-	DeleteTemp       bool   // delete temp dir after conversion is done
+
+	// Path of directory where ImageMagick temporary files will be stored.
+	// If nil, default will be used.
+	IMTempDir *string
+
+	DeleteTemp bool // delete temp dir after conversion is done
 }
