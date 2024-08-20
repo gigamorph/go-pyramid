@@ -22,6 +22,7 @@ func TestConvert(t *testing.T) {
 			Quality:          90,
 			TargetICCProfile: iccProfile,
 			TempDir:          tempDir,
+			IMTempDir:        nil,
 			DeleteTemp:       true,
 		})
 		if err != nil {

@@ -18,15 +18,25 @@ import (
 	"github.com/gigamorph/go-pyramid/shellcmds/vips"
 )
 
+func getFirstWord(s string) string {
+	outStr := s
+	spaceLoc := strings.Index(s, " ")
+	if spaceLoc != -1 {
+		outStr = s[:spaceLoc]
+	}
+	return outStr
+}
+
 // Agent is a wrapper around tools and operations used to convert
 // images to pyramidal TIFF.
 //
 // There should be only one instance of Agent running at any time.
 // A typical usage is:
-//   agent := NewAgent()
-//   agent.Initialize()
-//   defer agent.Finalize()
-//   agent.Convert(params) // params is of convert.Params type
+//
+// agent := NewAgent()
+// agent.Initialize()
+// defer agent.Finalize()
+// agent.Convert(params) // params is of convert.Params type
 type Agent struct {
 }
 
@@ -41,6 +51,10 @@ func New() *Agent {
 func (a *Agent) Convert(p input.Params) (*output.Params, error) {
 	c := context.New(p)
 	a.mkdirp(c.Input.TempDir)
+
+	if c.Input.IMTempDir != nil {
+		a.mkdirp(*c.Input.IMTempDir)
+	}
 
 	err := a.toPyramidTIFF(c)
 	if err != nil {
@@ -65,9 +79,6 @@ func (a *Agent) toPyramidTIFF(c *context.Context) (err error) {
 	if err = vips.ToTiff(fmt.Sprintf("%s[0]", c.Input.InFile), c.TiffFile); err != nil {
 		return fmt.Errorf("pyramid.agent.Agent#ToPyramidTIFF failed to convert %s to TIFF - %v", c.Input.InFile, err)
 	}
-	if err != nil {
-		return fmt.Errorf("pyramid.agent.Agent#ToPyramidTIFF failed to convert to tiff - %v", err)
-	}
 
 	tiff := c.TiffFile
 
@@ -83,10 +94,12 @@ func (a *Agent) toPyramidTIFF(c *context.Context) (err error) {
 	c.Output.InputWidth = c.Width
 	c.Output.InputHeight = c.Height
 
-	imageFormat, channels, depth, iccProfileName, err := im.GetInfo(tiff)
+	imageFormat, channels, depth, iccProfileName, err := im.GetInfo(tiff, c.Input.IMTempDir)
 	if err != nil {
 		return fmt.Errorf("pyramid.agent.Agent#toPyramidTIFF failed get info from %s - %v", tiff, err)
 	}
+	channelsPrefix := getFirstWord(channels)
+
 	depth64, err := strconv.ParseUint(depth, 10, 64)
 	if err != nil {
 		return fmt.Errorf("pyramid.agent.Agent#toPyramidTIFF failed to parse depth - %v", err)
@@ -96,18 +109,18 @@ func (a *Agent) toPyramidTIFF(c *context.Context) (err error) {
 	log.Printf("imageFormat: %s, channels: %s, profile: %s for %s\n", imageFormat, channels, iccProfileName, tiff)
 
 	// Check if channels is supported
-	if valid := a.validateChannels(channels); !valid {
+	if valid := a.validateChannels(channelsPrefix); !valid {
 		return fmt.Errorf("image %s has channels %s which is not supported at this time",
 			tiff, channels)
 	}
 
 	// We have to flatten the image to remove the alpha channel / trasparency
 	// before proceeding
-	if channels == "srgba" {
+	if channelsPrefix == "srgba" {
 		if err = vips.RemoveAlpha(tiff, c.NoalphaFile); err != nil {
 			return fmt.Errorf("Agent#toPyramidTIFF RemoveAlpha failed - %v", err)
 		}
-	} else if channels == "graya" {
+	} else if channelsPrefix == "graya" {
 		if err = vips.RemoveAlphaFromGraya(tiff, c.NoalphaFile); err != nil {
 			return fmt.Errorf("Agent#toPyramidTIFF RemoveAlphaGraya failed - %v", err)
 		}
@@ -123,14 +136,14 @@ func (a *Agent) toPyramidTIFF(c *context.Context) (err error) {
 	// an appropriate profile for the icc_transform command, so we have to call
 	// vipsthumbnail instead which does some magick behind the scenes to properly
 	// convert between the profiles.
-	if channels == "gray" && (iccProfileName == "" || iccProfileName == "sRGB Profile") {
+	if channelsPrefix == "gray" && (iccProfileName == "" || iccProfileName == "sRGB Profile") {
 		log.Printf("Fixing gray image %s with profile [%s]", c.NoalphaFile, iccProfileName)
 		err = vips.FixGray(c.NoalphaFile, c.GrayFixedFile)
 		if err != nil {
 			return fmt.Errorf("Agent#toPyramidTIFF FixGray failed - %v", err)
 		}
 		newProfile = true
-	} else if channels == "gray" && iccProfileName == "Adobe RGB (1998)" {
+	} else if channelsPrefix == "gray" && iccProfileName == "Adobe RGB (1998)" {
 		log.Printf("Converting gray image %s to sRGB", c.NoalphaFile)
 		err = combined.GrayToSRGB(c.NoalphaFile, c.GrayFixedFile)
 		if err != nil {
@@ -159,14 +172,14 @@ func (a *Agent) toPyramidTIFF(c *context.Context) (err error) {
 		c.ProfileFixedFile = c.GrayFixedFile
 	}
 
-	err = a.createPyramid(c, c.ProfileFixedFile, c.Input.OutFile)
+	err = a.createPyramid(c, c.ProfileFixedFile)
 	if err != nil {
 		return fmt.Errorf("Agent#toPyramidTIFF createPyramid failed - %v", err)
 	}
 	return nil
 }
 
-func (a *Agent) createPyramid(c *context.Context, inFile, outFile string) (err error) {
+func (a *Agent) createPyramid(c *context.Context, inFile string) (err error) {
 	var w, h uint
 
 	if w, h, err = a.initialResize(c, inFile); err != nil {
