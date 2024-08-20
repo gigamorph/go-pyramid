@@ -18,6 +18,15 @@ import (
 	"github.com/gigamorph/go-pyramid/shellcmds/vips"
 )
 
+func getFirstWord(s string) string {
+	outStr := s
+	spaceLoc := strings.Index(s, " ")
+	if spaceLoc != -1 {
+		outStr = s[:spaceLoc]
+	}
+	return outStr
+}
+
 // Agent is a wrapper around tools and operations used to convert
 // images to pyramidal TIFF.
 //
@@ -89,6 +98,8 @@ func (a *Agent) toPyramidTIFF(c *context.Context) (err error) {
 	if err != nil {
 		return fmt.Errorf("pyramid.agent.Agent#toPyramidTIFF failed get info from %s - %v", tiff, err)
 	}
+	channelsPrefix := getFirstWord(channels)
+
 	depth64, err := strconv.ParseUint(depth, 10, 64)
 	if err != nil {
 		return fmt.Errorf("pyramid.agent.Agent#toPyramidTIFF failed to parse depth - %v", err)
@@ -98,18 +109,18 @@ func (a *Agent) toPyramidTIFF(c *context.Context) (err error) {
 	log.Printf("imageFormat: %s, channels: %s, profile: %s for %s\n", imageFormat, channels, iccProfileName, tiff)
 
 	// Check if channels is supported
-	if valid := a.validateChannels(channels); !valid {
+	if valid := a.validateChannels(channelsPrefix); !valid {
 		return fmt.Errorf("image %s has channels %s which is not supported at this time",
 			tiff, channels)
 	}
 
 	// We have to flatten the image to remove the alpha channel / trasparency
 	// before proceeding
-	if channels == "srgba" {
+	if channelsPrefix == "srgba" {
 		if err = vips.RemoveAlpha(tiff, c.NoalphaFile); err != nil {
 			return fmt.Errorf("Agent#toPyramidTIFF RemoveAlpha failed - %v", err)
 		}
-	} else if channels == "graya" {
+	} else if channelsPrefix == "graya" {
 		if err = vips.RemoveAlphaFromGraya(tiff, c.NoalphaFile); err != nil {
 			return fmt.Errorf("Agent#toPyramidTIFF RemoveAlphaGraya failed - %v", err)
 		}
@@ -125,14 +136,14 @@ func (a *Agent) toPyramidTIFF(c *context.Context) (err error) {
 	// an appropriate profile for the icc_transform command, so we have to call
 	// vipsthumbnail instead which does some magick behind the scenes to properly
 	// convert between the profiles.
-	if channels == "gray" && (iccProfileName == "" || iccProfileName == "sRGB Profile") {
+	if channelsPrefix == "gray" && (iccProfileName == "" || iccProfileName == "sRGB Profile") {
 		log.Printf("Fixing gray image %s with profile [%s]", c.NoalphaFile, iccProfileName)
 		err = vips.FixGray(c.NoalphaFile, c.GrayFixedFile)
 		if err != nil {
 			return fmt.Errorf("Agent#toPyramidTIFF FixGray failed - %v", err)
 		}
 		newProfile = true
-	} else if channels == "gray" && iccProfileName == "Adobe RGB (1998)" {
+	} else if channelsPrefix == "gray" && iccProfileName == "Adobe RGB (1998)" {
 		log.Printf("Converting gray image %s to sRGB", c.NoalphaFile)
 		err = combined.GrayToSRGB(c.NoalphaFile, c.GrayFixedFile)
 		if err != nil {
